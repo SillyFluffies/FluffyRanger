@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 	"time"
 
@@ -20,8 +21,15 @@ import (
 
 var (
 	Version = "dev"
-	Commit  = "unknown"
 )
+
+func init() {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		return
+	}
+	Version = bi.Main.Version
+}
 
 func main() {
 	shouldSyncCommands := flag.Bool("sync-commands", false, "Whether to sync commands to discord")
@@ -35,10 +43,10 @@ func main() {
 	}
 
 	setupLogger(cfg.Log)
-	slog.Info("Starting bot-template...", slog.String("version", Version), slog.String("commit", Commit))
+	slog.Info("Starting bot-template...", slog.String("version", Version))
 	slog.Info("Syncing commands", slog.Bool("sync", *shouldSyncCommands))
 
-	b := bottemplate.New(*cfg, Version, Commit)
+	b := bottemplate.New(*cfg, Version)
 
 	h := handler.New()
 	h.Command("/test", commands.TestHandler)
