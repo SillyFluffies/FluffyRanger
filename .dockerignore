@@ -1,6 +1,5 @@
 .idea/
+.zed/
 .github/
 README.md
-LICENSE
-config.toml
-config.example.toml
+LICENSE.md

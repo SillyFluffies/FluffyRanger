@@ -1,9 +1,9 @@
-module github.com/disgoorg/bot-template
+module fluffyranger
 
 go 1.25
 
 require (
-	github.com/disgoorg/disgo v0.19.0-rc.2.0.20250826065848-3cb3c74a5b19
+	github.com/disgoorg/disgo v0.19.0-rc.5
 	github.com/disgoorg/omit v1.0.0
 	github.com/disgoorg/snowflake/v2 v2.0.3
 	github.com/pelletier/go-toml/v2 v2.2.4
