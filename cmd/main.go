@@ -11,26 +11,24 @@ import (
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/cache"
-	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/gateway"
 	"github.com/disgoorg/disgo/handler"
 
-	fluf "fluffyranger/internal"
-	flufCommands "fluffyranger/internal/commands"
-	flufComponents "fluffyranger/internal/components"
-	flufEvents "fluffyranger/internal/events"
-	"fluffyranger/pkg/logger"
+
+	"github.com/sillyfluffies/fluffyranger/internal/commands"
+	"github.com/sillyfluffies/fluffyranger/internal/components"
+	"github.com/sillyfluffies/fluffyranger/internal/events"
+	"github.com/sillyfluffies/fluffyranger/internal/config"
 )
 
 func main() {
-	cfg, err := fluf.LoadConfig("config.toml")
+	cfg, err := config.LoadConfig("config.toml")
 	if err != nil {
 		slog.Error("Failed to read config", slog.Any("err", err))
 		os.Exit(-1)
 	}
 
-	logger.SetupLogger(cfg.Log.Format, &slog.HandlerOptions{
+	config.SetupLogger(cfg.Log.Format, &slog.HandlerOptions{
 		Level:     cfg.Log.Level,
 		AddSource: cfg.Log.AddSource,
 	})
@@ -39,9 +37,9 @@ func main() {
 	b, err := disgo.New(os.Getenv("token"),
 		bot.WithGatewayConfigOpts(gateway.WithIntents(gateway.IntentGuilds, gateway.IntentGuildMessages, gateway.IntentMessageContent)),
 		bot.WithCacheConfigOpts(cache.WithCaches(cache.FlagGuilds)),
-		flufCommands.Setup(),
-		flufEvents.Setup(),
-		flufComponents.Setup(),
+		commands.Setup(),
+		events.Setup(),
+		components.Setup(),
 	)
 	if err != nil {
 		slog.Error("Failed to create bot", slog.Any("err", err))
@@ -55,7 +53,7 @@ func main() {
 	}()
 
 	slog.Info("Syncing commands", slog.Any("guild_ids", cfg.Bot.DevGuilds))
-	if err = handler.SyncCommands(b, flufCommands.Cmds, cfg.Bot.DevGuilds); err != nil {
+	if err = handler.SyncCommands(b, commands.Cmds, cfg.Bot.DevGuilds); err != nil {
 		slog.Error("Failed to sync commands", slog.Any("err", err))
 	}
 
@@ -73,11 +71,4 @@ func main() {
 	slog.Info("Shutting down bot...")
 }
 
-func OnReady(e *events.Ready) {
-	slog.Info("bot-template ready")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := e.Client().SetPresence(ctx, gateway.WithListeningActivity("you"), gateway.WithOnlineStatus(discord.OnlineStatusOnline)); err != nil {
-		slog.Error("Failed to set presence", slog.Any("err", err))
-	}
-}
+

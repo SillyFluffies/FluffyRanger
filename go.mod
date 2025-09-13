@@ -1,4 +1,4 @@
-module fluffyranger
+module github.com/sillyfluffies/fluffyranger
 
 go 1.25
 
