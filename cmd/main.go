@@ -21,13 +21,17 @@ import (
 )
 
 var (
-	token        = os.Getenv("token")
 	loggerFormat = "custom"
 	loggerOpts   = slog.HandlerOptions{
 		Level:     slog.LevelInfo,
 		AddSource: true,
 	}
-	devGuilds []snowflake.ID = []snowflake.ID{}
+	
+	devGuilds = []snowflake.ID{}
+	token     = os.Getenv("token")
+	
+	intents = gateway.IntentGuilds | gateway.IntentGuildMessages | gateway.IntentMessageContent
+	caches = cache.FlagGuilds | cache.FlagMembers 
 )
 
 func main() {
@@ -35,8 +39,8 @@ func main() {
 	slog.Info("Starting bot")
 
 	b, err := disgo.New(token,
-		bot.WithGatewayConfigOpts(gateway.WithIntents(gateway.IntentGuilds, gateway.IntentGuildMessages, gateway.IntentMessageContent)),
-		bot.WithCacheConfigOpts(cache.WithCaches(cache.FlagGuilds)),
+		bot.WithGatewayConfigOpts(gateway.WithIntents(intents)),
+		bot.WithCacheConfigOpts(cache.WithCaches(caches)),
 		commands.Setup(),
 		events.Setup(),
 		components.Setup(),
@@ -55,8 +59,8 @@ func main() {
 	}
 
 	commands.Sync(b, devGuilds)
-	slog.Info("Bot is running. Press CTRL-C to exit.")
-
+	slog.Info("Bot is running. Press CTRL-C to exit")
+	
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM)
 	<-s
