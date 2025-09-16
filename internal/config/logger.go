@@ -9,20 +9,15 @@ import (
 	"strings"
 )
 
-const (
-	FormatJSON   = "json"
-	FormatText   = "text"
-	FormatCustom = "custom"
-)
 
 func SetupLogger(format string, opts *slog.HandlerOptions) {
 	var sHandler slog.Handler
 	switch format {
-	case FormatJSON:
+	case "json":
 		sHandler = slog.NewJSONHandler(os.Stdout, opts)
-	case FormatText:
+	case "text":
 		sHandler = slog.NewTextHandler(os.Stdout, opts)
-	case FormatCustom:
+	case "custom":
 		sHandler = NewCustomHandler(os.Stdout, opts)
 	default:
 		slog.Error("Unknown log format", slog.String("format", format))

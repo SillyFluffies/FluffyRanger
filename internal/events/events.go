@@ -2,6 +2,7 @@ package events
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -23,7 +24,16 @@ func MessageHandler() bot.EventListener {
 
 func OnReady() bot.EventListener {
 	return bot.NewListenerFunc(func(e *events.Ready) {
-		slog.Info("bot-template ready")
+		fmt.Println("\033[38;5;220m" + `
+  ______ _        __  __       _____
+ |  ____| |      / _|/ _|     |  __ \
+ | |__  | |_   _| |_| |_ _   _| |__) |__ _ _ __   __ _  ___ _ __
+ |  __| | | | | |  _|  _| | | |  _  /  _' | '_ \ / _' |/ _ \ '__|
+ | |    | | |_| | | | | | |_| | | \ \ (_| | | | | (_| |  __/ |
+ |_|    |_|\__,_|_| |_|  \__, |_|  \_\__,_|_| |_|\__, |\___|_|
+                          __/ |                   __/ |
+                         |___/                   |___/
+        `)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := e.Client().SetPresence(ctx, gateway.WithListeningActivity("you"), gateway.WithOnlineStatus(discord.OnlineStatusOnline)); err != nil {

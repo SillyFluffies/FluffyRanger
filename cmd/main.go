@@ -12,29 +12,29 @@ import (
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/cache"
 	"github.com/disgoorg/disgo/gateway"
-	"github.com/disgoorg/disgo/handler"
-
+	"github.com/disgoorg/snowflake/v2"
 
 	"github.com/sillyfluffies/fluffyranger/internal/commands"
 	"github.com/sillyfluffies/fluffyranger/internal/components"
-	"github.com/sillyfluffies/fluffyranger/internal/events"
 	"github.com/sillyfluffies/fluffyranger/internal/config"
+	"github.com/sillyfluffies/fluffyranger/internal/events"
+)
+
+var (
+	token        = os.Getenv("token")
+	loggerFormat = "custom"
+	loggerOpts   = slog.HandlerOptions{
+		Level:     slog.LevelInfo,
+		AddSource: true,
+	}
+	devGuilds []snowflake.ID = []snowflake.ID{}
 )
 
 func main() {
-	cfg, err := config.LoadConfig("config.toml")
-	if err != nil {
-		slog.Error("Failed to read config", slog.Any("err", err))
-		os.Exit(-1)
-	}
+	config.SetupLogger(loggerFormat, &loggerOpts)
+	slog.Info("Starting bot")
 
-	config.SetupLogger(cfg.Log.Format, &slog.HandlerOptions{
-		Level:     cfg.Log.Level,
-		AddSource: cfg.Log.AddSource,
-	})
-	slog.Info("Starting bot-template...")
-
-	b, err := disgo.New(os.Getenv("token"),
+	b, err := disgo.New(token,
 		bot.WithGatewayConfigOpts(gateway.WithIntents(gateway.IntentGuilds, gateway.IntentGuildMessages, gateway.IntentMessageContent)),
 		bot.WithCacheConfigOpts(cache.WithCaches(cache.FlagGuilds)),
 		commands.Setup(),
@@ -46,29 +46,19 @@ func main() {
 		os.Exit(-1)
 	}
 
-	defer func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		b.Close(ctx)
-	}()
-
-	slog.Info("Syncing commands", slog.Any("guild_ids", cfg.Bot.DevGuilds))
-	if err = handler.SyncCommands(b, commands.Cmds, cfg.Bot.DevGuilds); err != nil {
-		slog.Error("Failed to sync commands", slog.Any("err", err))
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err = b.OpenGateway(ctx); err != nil {
 		slog.Error("Failed to open gateway", slog.Any("err", err))
+		b.Close(ctx)
 		os.Exit(-1)
 	}
 
+	commands.Sync(b, devGuilds)
 	slog.Info("Bot is running. Press CTRL-C to exit.")
+
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM)
 	<-s
 	slog.Info("Shutting down bot...")
 }
-
-
